@@ -33,14 +33,17 @@ const ProductView: FC<Props> = ({ product }) => {
     currencyCode: product.prices?.price?.currencyCode!,
   })
   const { openSidebar } = useUI()
-  const options = getProductOptions(product)
+  // const options = getProductOptions(product)
+  const options: any[] = []
   const [loading, setLoading] = useState(false)
   const [choices, setChoices] = useState<SelectedOptions>({
     size: null,
     color: null,
   })
-  const variant =
-    getCurrentVariant(product, choices) || product.variants.edges?.[0]
+  /* const variant =
+    getCurrentVariant(product, choices) || product.variants.edges?.[0] */
+
+    const variant = false
 
   const addToCart = async () => {
     setLoading(true)
@@ -67,7 +70,8 @@ const ProductView: FC<Props> = ({ product }) => {
           description: product.description,
           images: [
             {
-              url: product.images.edges?.[0]?.node.urlOriginal!,
+              // url: product.images.edges?.[0]?.node.urlOriginal!,
+              url: null,
               width: 800,
               height: 600,
               alt: product.name,
@@ -88,7 +92,7 @@ const ProductView: FC<Props> = ({ product }) => {
 
           <div className={s.sliderContainer}>
             <ProductSlider>
-              {product.images.edges?.map((image, i) => (
+              {product.images && product.images.edges?.map((image, i) => (
                 <div key={image?.node.urlOriginal} className={s.imageContainer}>
                   <Image
                     className={s.img}
@@ -157,7 +161,7 @@ const ProductView: FC<Props> = ({ product }) => {
         <WishlistButton
           className={s.wishlistButton}
           productId={product.entityId}
-          variant={product.variants.edges?.[0]!}
+          variant={null}
         />
       </div>
     </Container>
