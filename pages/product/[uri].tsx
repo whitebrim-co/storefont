@@ -4,16 +4,19 @@ import type {
   InferGetStaticPropsType,
 } from 'next'
 import { useRouter } from 'next/router'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
-import getProduct from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
+
 import { Layout } from '@components/core'
 import { ProductView } from '@components/product'
-import getAllProductPaths from '@bigcommerce/storefront-data-hooks/api/operations/get-all-product-paths'
 
 import { getItems, getItemByUri } from 'whitebrim'
 
-const fetchAllModels = async (data: {
+//! BIGCOMMERCE
+/* import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
+import getAllProductPaths from '@bigcommerce/storefront-data-hooks/api/operations/get-all-product-paths'
+import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
+import getProduct from '@bigcommerce/storefront-data-hooks/api/operations/get-product' */
+
+const getAllModels = async (data: {
   currentPage: any
   selectedPageSize: any
 }) => {
@@ -41,48 +44,47 @@ const fetchAllModels = async (data: {
     }))
 }
 
-const fetchData = async (uri: any) => {
-    let params = {
-        modelName: "product",
-        uri: uri,
-    };
+const getItem = async (uri: any) => {
+  let params = {
+    modelName: 'product',
+    uri: uri,
+  }
 
-    return getItemByUri(params)
-        .then((res) => ({
-            product: res.data,
-            error: false,
-        }))
-        .catch(() => ({
-            product: null,
-            error: true,
-        }));
-};
+  return getItemByUri(params)
+    .then((res) => ({
+      product: res.data,
+      error: false,
+    }))
+    .catch(() => ({
+      product: null,
+      error: true,
+    }))
+}
 
 export async function getStaticProps({
   params,
   locale,
   preview,
 }: GetStaticPropsContext<{ slug: string }>) {
-  const config = getConfig({ locale })
+  //! BIGCOMMERCE
+  /* const config = getConfig({ locale })
+  const { pages } = await getAllPages({ config, preview })
+  const { product } = await getProduct({
+    variables: { slug: params!.slug },
+    config,
+    preview,
+  }) */
 
-  // const { pages } = await getAllPages({ config, preview })
-  // const { product } = await getProduct({
-    // variables: { slug: params!.slug },
-    // config,
-    // preview,
-  // })
-
-  console.log(params)
-
-  const data = await fetchData(params.uri);
+  const data = await getItem(params.uri)
 
   if (!data) {
     throw new Error(`Product with slug '${params!.uri}' not found`)
   }
 
-  // if (!product) {
-    // throw new Error(`Product with slug '${params!.slug}' not found`)
-  // }
+  //! BIGCOMMERCE
+  /* if (!product) {
+    throw new Error(`Product with slug '${params!.slug}' not found`)
+  } */
 
   return {
     props: data,
@@ -91,13 +93,14 @@ export async function getStaticProps({
 }
 
 export async function getStaticPaths({ locales }: GetStaticPathsContext) {
+  //! BIGCOMMERCE
   // const { products } = await getAllProductPaths();
+
   let payload = {
     currentPage: 1,
     selectedPageSize: 150,
   }
-  const data = await fetchAllModels(payload)
-
+  const data = await getAllModels(payload)
   return {
     paths: locales
       ? locales.reduce<string[]>((arr, locale) => {

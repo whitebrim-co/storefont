@@ -8,16 +8,18 @@ import { useUI } from '@components/ui/context'
 import { Swatch, ProductSlider } from '@components/product'
 import { Button, Container } from '@components/ui'
 import { HTMLContent } from '@components/core'
+import WishlistButton from '@components/wishlist/WishlistButton'
+
+import { addToCart } from 'whitebrim'
 
 import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
 import useAddItem from '@bigcommerce/storefront-data-hooks/cart/use-add-item'
 import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
 import {
-  getCurrentVariant,
-  getProductOptions,
+  // getCurrentVariant,
+  // getProductOptions,
   SelectedOptions,
 } from '../helpers'
-import WishlistButton from '@components/wishlist/WishlistButton'
 
 interface Props {
   className?: string
@@ -26,6 +28,12 @@ interface Props {
 }
 
 const ProductView: FC<Props> = ({ product }) => {
+  console.log(product)
+
+  //! BIGCOMMERCE
+  // const variant = getCurrentVariant(product, choices) || product.variants.edges?.[0]
+  // const options = getProductOptions(product)
+
   const addItem = useAddItem()
   const { price } = usePrice({
     amount: product.prices?.price?.value,
@@ -33,30 +41,40 @@ const ProductView: FC<Props> = ({ product }) => {
     currencyCode: product.prices?.price?.currencyCode!,
   })
   const { openSidebar } = useUI()
-  // const options = getProductOptions(product)
   const options: any[] = []
   const [loading, setLoading] = useState(false)
   const [choices, setChoices] = useState<SelectedOptions>({
     size: null,
     color: null,
   })
-  /* const variant =
-    getCurrentVariant(product, choices) || product.variants.edges?.[0] */
 
-    const variant = false
-
-  const addToCart = async () => {
+  const addToCart = () => {
     setLoading(true)
-    try {
-      await addItem({
-        productId: product.entityId,
-        variantId: product.variants.edges?.[0]?.node.entityId!,
-      })
-      openSidebar()
-      setLoading(false)
-    } catch (err) {
-      setLoading(false)
+    let submitValues = {
+      addons: [],
+      customizations: [],
+      model_id: product._id,
+      model_name: product.model_name,
+      quantity: 1,
+      // userId: auth.userId, // USER ID
     }
+    addToCart(submitValues)
+      .then((response) => {
+        console.log(response)
+        if (response.status === 200) {
+          openSidebar()
+          setLoading(false)
+        } else if (response.status === 304) {
+          setLoading(false)
+        }
+      })
+      .catch((err) => {
+        if (err && err.response && err.response.status === 304) {
+          setLoading(false)
+        } else {
+          setLoading(false)
+        }
+      })
   }
 
   return (
@@ -70,8 +88,7 @@ const ProductView: FC<Props> = ({ product }) => {
           description: product.description,
           images: [
             {
-              // url: product.images.edges?.[0]?.node.urlOriginal!,
-              url: null,
+              url: `https:${product.photo.url}`,
               width: 800,
               height: 600,
               alt: product.name,
@@ -84,27 +101,28 @@ const ProductView: FC<Props> = ({ product }) => {
           <div className={s.nameBox}>
             <h1 className={s.name}>{product.name}</h1>
             <div className={s.price}>
-              {price}
-              {` `}
-              {product.prices?.price.currencyCode}
+              {product.price}
+              {` `}€{/* {product.prices?.price.currencyCode} */}
             </div>
           </div>
 
           <div className={s.sliderContainer}>
             <ProductSlider>
-              {product.images && product.images.edges?.map((image, i) => (
-                <div key={image?.node.urlOriginal} className={s.imageContainer}>
-                  <Image
-                    className={s.img}
-                    src={image?.node.urlOriginal!}
-                    alt={image?.node.altText || 'Product Image'}
-                    width={1050}
-                    height={1050}
-                    priority={i === 0}
-                    quality="85"
-                  />
-                </div>
-              ))}
+              {product.gallery &&
+                product.gallery.map((image, i) => (
+                  <div key={image.url} className={s.imageContainer}>
+                    <Image
+                      className={s.img}
+                      src={`https:${image.url}`}
+                      // alt={image?.node.altText || 'Product Image'}
+                      alt={'Product Image'}
+                      width={1050}
+                      height={1050}
+                      priority={i === 0}
+                      quality="85"
+                    />
+                  </div>
+                ))}
             </ProductSlider>
           </div>
         </div>
@@ -151,7 +169,7 @@ const ProductView: FC<Props> = ({ product }) => {
               className={s.button}
               onClick={addToCart}
               loading={loading}
-              disabled={!variant}
+              // disabled={!variant} if (no variant selected and variantLength > 0)
             >
               Add to Cart
             </Button>

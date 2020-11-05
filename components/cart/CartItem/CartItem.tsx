@@ -77,7 +77,7 @@ const CartItem = ({
       <div className="w-16 h-16 bg-violet relative overflow-hidden">
         <Image
           className={s.productImage}
-          src={item.image_url}
+          src={`http:${item.photo.url}`}
           width={150}
           height={150}
           alt="Product Image"
@@ -87,7 +87,7 @@ const CartItem = ({
       </div>
       <div className="flex-1 flex flex-col text-base">
         {/** TODO: Replace this. No `path` found at Cart */}
-        <Link href={`/product/${item.url.split('/')[3]}`}>
+        <Link href={`/product/${item.uri}`}>
           <span className="font-bold mb-5 text-lg cursor-pointer">
             {item.name}
           </span>

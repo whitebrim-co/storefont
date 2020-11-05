@@ -1,7 +1,7 @@
 module.exports = {
   images: {
     sizes: [320, 480, 820, 1200, 1600],
-    domains: ['cdn11.bigcommerce.com'],
+    domains: ['cdn11.bigcommerce.com', 'whitebrim2.imgix.net'],
   },
   i18n: {
     locales: ['en-US', 'es'],

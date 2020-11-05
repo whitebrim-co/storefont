@@ -1,16 +1,41 @@
-import { FC } from 'react'
+import { FC, useState, useEffect } from 'react'
 import cn from 'classnames'
+
 import { UserNav } from '@components/core'
 import { Button } from '@components/ui'
 import { Bag, Cross, Check } from '@components/icons'
 import { useUI } from '@components/ui/context'
-import useCart from '@bigcommerce/storefront-data-hooks/cart/use-cart'
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
+
 import CartItem from '../CartItem'
 import s from './CartSidebarView.module.css'
 
+import { getUser } from 'whitebrim'
+
+// import useCart from '@bigcommerce/storefront-data-hooks/cart/use-cart'
+// import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
+
 const CartSidebarView: FC = () => {
-  const { data, isEmpty } = useCart()
+  const [cart, setCart] = useState([])
+  const [isEmpty, setEmpty] = useState(false)
+  const [cartLoaded, setCartLoaded] = useState(false)
+
+  useEffect(() => {
+    if (!cartLoaded) {
+      getUser()
+        .then((response) => {
+          const user = response.data
+          if (user.cart.length <= 0) {
+            setEmpty(true)
+          }
+          setCart(user.cart)
+        })
+        .catch((err) => {
+          console.log(err.response)
+        })
+    }
+  }, [])
+
+  /* const { data, isEmpty } = useCart()
   const { price: subTotal } = usePrice(
     data && {
       amount: data.base_amount,
@@ -22,14 +47,17 @@ const CartSidebarView: FC = () => {
       amount: data.cart_amount,
       currencyCode: data.currency.code,
     }
-  )
+  ) */
+
   const { closeSidebar } = useUI()
   const handleClose = () => closeSidebar()
 
-  const items = data?.line_items.physical_items ?? []
+  // const items = data?.line_items.physical_items ?? []
 
   const error = null
   const success = null
+
+  console.log(cart)
 
   return (
     <div
@@ -68,7 +96,7 @@ const CartSidebarView: FC = () => {
             Biscuit oat cake wafer icing ice cream tiramisu pudding cupcake.
           </p>
         </div>
-      ) : error ? (
+      ) : false ? (
         <div className="flex-1 px-4 flex flex-col justify-center items-center">
           <span className="border border-white rounded-full flex items-center justify-center w-16 h-16">
             <Cross width={24} height={24} />
@@ -78,7 +106,7 @@ const CartSidebarView: FC = () => {
             and try again.
           </h2>
         </div>
-      ) : success ? (
+      ) : false ? (
         <div className="flex-1 px-4 flex flex-col justify-center items-center">
           <span className="border border-white rounded-full flex items-center justify-center w-16 h-16">
             <Check />
@@ -94,11 +122,12 @@ const CartSidebarView: FC = () => {
               My Cart
             </h2>
             <ul className="py-6 space-y-6 sm:py-0 sm:space-y-0 sm:divide-y sm:divide-accents-3 border-t border-accents-3">
-              {items.map((item) => (
+              {cart.map((item) => (
                 <CartItem
-                  key={item.id}
+                  key={item._id}
                   item={item}
-                  currencyCode={data?.currency.code!}
+                  // currencyCode={data?.currency.code!}
+                  currencyCode={'€'}
                 />
               ))}
             </ul>
@@ -109,7 +138,7 @@ const CartSidebarView: FC = () => {
               <ul className="py-3">
                 <li className="flex justify-between py-1">
                   <span>Subtotal</span>
-                  <span>{subTotal}</span>
+                  {/* <span>{subTotal}</span> */}
                 </li>
                 <li className="flex justify-between py-1">
                   <span>Taxes</span>
@@ -122,7 +151,8 @@ const CartSidebarView: FC = () => {
               </ul>
               <div className="flex justify-between border-t border-accents-3 py-3 font-bold mb-10">
                 <span>Total</span>
-                <span>{total}</span>
+                {/* <span>{total}</span> */}
+                <span>total</span>
               </div>
             </div>
             <Button href="/checkout" Component="a" width="100%">

@@ -1,8 +1,11 @@
 import { FC, useEffect, useState, useCallback } from 'react'
 import { Logo, Button, Input } from '@components/ui'
-import useLogin from '@bigcommerce/storefront-data-hooks/use-login'
 import { useUI } from '@components/ui/context'
 import { validate } from 'email-validator'
+import { loginUser, getUser } from 'whitebrim'
+
+//! BIGCOMMERCE
+//import useLogin from '@bigcommerce/storefront-data-hooks/use-login'
 
 interface Props {}
 
@@ -16,9 +19,9 @@ const LoginView: FC<Props> = () => {
   const [disabled, setDisabled] = useState(false)
   const { setModalView, closeModal } = useUI()
 
-  const login = useLogin()
+  // const login = useLogin()
 
-  const handleLogin = async (e: React.SyntheticEvent<EventTarget>) => {
+  const handleLogin = (e: React.SyntheticEvent<EventTarget>) => {
     e.preventDefault()
 
     if (!dirty && !disabled) {
@@ -26,19 +29,39 @@ const LoginView: FC<Props> = () => {
       handleValidation()
     }
 
-    try {
-      setLoading(true)
-      setMessage('')
-      await login({
-        email,
-        password,
-      })
-      setLoading(false)
-      closeModal()
-    } catch ({ errors }) {
-      setMessage(errors[0].message)
-      setLoading(false)
+    let data = {
+      email: email,
+      password: password,
     }
+
+    setLoading(true)
+    loginUser(data)
+      .then((response) => {
+        getUser()
+          .then((response) => {
+            console.log(response)
+            //! BETA
+            // const user = response.data;
+            // if (user.cart.length === 0) user.cart = auth.cart;
+            // getUserSuccess(user);
+
+            setLoading(false)
+            setMessage('Login feito com sucesso')
+            setTimeout(() => {
+              setMessage('')
+            }, 2500)
+            closeModal()
+          })
+          .catch((error) => {
+            console.log(error)
+            setMessage('Error')
+            setLoading(false)
+          })
+      })
+      .catch(({ errors }) => {
+        setMessage('Error')
+        setLoading(false)
+      })
   }
 
   const handleValidation = useCallback(() => {
