@@ -1,9 +1,11 @@
 import { FC, useEffect, useState, useCallback } from 'react'
 import { validate } from 'email-validator'
+
 import { Info } from '@components/icons'
 import { useUI } from '@components/ui/context'
 import { Logo, Button, Input } from '@components/ui'
-import useSignup from '@bigcommerce/storefront-data-hooks/use-signup'
+
+import { registerUser, getUser } from 'whitebrim'
 
 interface Props {}
 
@@ -17,8 +19,6 @@ const SignUpView: FC<Props> = () => {
   const [message, setMessage] = useState('')
   const [dirty, setDirty] = useState(false)
   const [disabled, setDisabled] = useState(false)
-
-  const signup = useSignup()
   const { setModalView, closeModal } = useUI()
 
   const handleSignup = async (e: React.SyntheticEvent<EventTarget>) => {
@@ -29,21 +29,36 @@ const SignUpView: FC<Props> = () => {
       handleValidation()
     }
 
-    try {
-      setLoading(true)
-      setMessage('')
-      await signup({
-        email,
-        firstName,
-        lastName,
-        password,
-      })
-      setLoading(false)
-      closeModal()
-    } catch ({ errors }) {
-      setMessage(errors[0].message)
-      setLoading(false)
+    let data = {
+      name: {
+        first: firstName,
+        last: lastName,
+      },
+      email: email,
+      password: password,
     }
+
+    setLoading(true)
+    registerUser(data)
+      .then((response) => {
+        getUser()
+          .then((response) => {
+            setLoading(false)
+            setMessage('Success')
+            setTimeout(() => {
+              setMessage('')
+            }, 2500)
+            closeModal()
+          })
+          .catch((error) => {
+            setMessage('Error')
+            setLoading(false)
+          })
+      })
+      .catch(({ errors }) => {
+        setMessage('Error')
+        setLoading(false)
+      })
   }
 
   const handleValidation = useCallback(() => {

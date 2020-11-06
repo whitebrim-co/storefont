@@ -8,38 +8,23 @@ import { useUI } from '@components/ui/context'
 import { Swatch, ProductSlider } from '@components/product'
 import { Button, Container } from '@components/ui'
 import { HTMLContent } from '@components/core'
-import WishlistButton from '@components/wishlist/WishlistButton'
+// import WishlistButton from '@components/wishlist/WishlistButton'
 
-import { addToCart } from 'whitebrim'
-
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-import useAddItem from '@bigcommerce/storefront-data-hooks/cart/use-add-item'
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
 import {
   // getCurrentVariant,
   // getProductOptions,
   SelectedOptions,
 } from '../helpers'
 
+import { addToCart } from 'whitebrim'
+
 interface Props {
   className?: string
   children?: any
-  product: ProductNode
+  product: any
 }
 
 const ProductView: FC<Props> = ({ product }) => {
-  console.log(product)
-
-  //! BIGCOMMERCE
-  // const variant = getCurrentVariant(product, choices) || product.variants.edges?.[0]
-  // const options = getProductOptions(product)
-
-  const addItem = useAddItem()
-  const { price } = usePrice({
-    amount: product.prices?.price?.value,
-    baseAmount: product.prices?.retailPrice?.value,
-    currencyCode: product.prices?.price?.currencyCode!,
-  })
   const { openSidebar } = useUI()
   const options: any[] = []
   const [loading, setLoading] = useState(false)
@@ -48,7 +33,7 @@ const ProductView: FC<Props> = ({ product }) => {
     color: null,
   })
 
-  const addToCart = () => {
+  const addItemToCart = () => {
     setLoading(true)
     let submitValues = {
       addons: [],
@@ -56,11 +41,10 @@ const ProductView: FC<Props> = ({ product }) => {
       model_id: product._id,
       model_name: product.model_name,
       quantity: 1,
-      // userId: auth.userId, // USER ID
+      userId: null, // USER ID
     }
     addToCart(submitValues)
       .then((response) => {
-        console.log(response)
         if (response.status === 200) {
           openSidebar()
           setLoading(false)
@@ -76,6 +60,8 @@ const ProductView: FC<Props> = ({ product }) => {
         }
       })
   }
+
+  const variant = false
 
   return (
     <Container className="max-w-none w-full" clean>
@@ -102,19 +88,18 @@ const ProductView: FC<Props> = ({ product }) => {
             <h1 className={s.name}>{product.name}</h1>
             <div className={s.price}>
               {product.price}
-              {` `}€{/* {product.prices?.price.currencyCode} */}
+              {` `}€
             </div>
           </div>
 
           <div className={s.sliderContainer}>
             <ProductSlider>
               {product.gallery &&
-                product.gallery.map((image, i) => (
+                product.gallery.map((image: { url: string }, i: number) => (
                   <div key={image.url} className={s.imageContainer}>
                     <Image
                       className={s.img}
                       src={`https:${image.url}`}
-                      // alt={image?.node.altText || 'Product Image'}
                       alt={'Product Image'}
                       width={1050}
                       height={1050}
@@ -167,20 +152,20 @@ const ProductView: FC<Props> = ({ product }) => {
               aria-label="Add to Cart"
               type="button"
               className={s.button}
-              onClick={addToCart}
+              onClick={addItemToCart}
               loading={loading}
-              // disabled={!variant} if (no variant selected and variantLength > 0)
+              disabled={!variant} // if (no variant selected and variantLength > 0)
             >
               Add to Cart
             </Button>
           </div>
         </div>
 
-        <WishlistButton
+        {/* <WishlistButton
           className={s.wishlistButton}
           productId={product.entityId}
           variant={null}
-        />
+        /> */}
       </div>
     </Container>
   )

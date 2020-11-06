@@ -1,15 +1,14 @@
 import type { FC } from 'react'
 import cn from 'classnames'
 import Link from 'next/link'
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-all-products'
-import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-import { EnhancedImage } from '@components/core'
 import s from './ProductCard.module.css'
-import WishlistButton from '@components/wishlist/WishlistButton'
+
+import { EnhancedImage } from '@components/core'
+// import WishlistButton from '@components/wishlist/WishlistButton'
 
 interface Props {
   className?: string
-  product: ProductNode
+  product: any
   variant?: 'slim' | 'simple'
   imgWidth: number | string
   imgHeight: number | string
@@ -24,15 +23,10 @@ const ProductCard: FC<Props> = ({
   imgHeight,
   priority,
 }) => {
-  const src = p.images.edges?.[0]?.node?.urlOriginal!
-  const { price } = usePrice({
-    amount: p.prices?.price?.value,
-    baseAmount: p.prices?.retailPrice?.value,
-    currencyCode: p.prices?.price?.currencyCode!,
-  })
+  const src = `https:${p.photo.url}`
 
   return (
-    <Link href={`/product${p.path}`}>
+    <Link href={`/product/${p.uri}`}>
       <a
         className={cn(s.root, { [s.simple]: variant === 'simple' }, className)}
       >
@@ -44,8 +38,8 @@ const ProductCard: FC<Props> = ({
               </span>
             </div>
             <EnhancedImage
-              src={p.images.edges?.[0]?.node.urlOriginal!}
-              alt={p.images.edges?.[0]?.node.altText || 'Product Image'}
+              src={`https:${p.photo.url}`}
+              alt={'Product Image'}
               width={imgWidth}
               height={imgHeight}
               priority={priority}
@@ -60,13 +54,13 @@ const ProductCard: FC<Props> = ({
                 <h3 className={s.productTitle}>
                   <span>{p.name}</span>
                 </h3>
-                <span className={s.productPrice}>{price}</span>
+                <span className={s.productPrice}>{p.price.toFixed(2)} €</span>
               </div>
-              <WishlistButton
+              {/* <WishlistButton
                 className={s.wishlistButton}
-                productId={p.entityId}
-                variant={p.variants.edges?.[0]!}
-              />
+                productId={p._id}
+                variant={null}
+              /> */}
             </div>
             <div className={s.imageContainer}>
               <EnhancedImage

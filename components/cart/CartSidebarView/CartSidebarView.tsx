@@ -11,9 +11,6 @@ import s from './CartSidebarView.module.css'
 
 import { getUser } from 'whitebrim'
 
-// import useCart from '@bigcommerce/storefront-data-hooks/cart/use-cart'
-// import usePrice from '@bigcommerce/storefront-data-hooks/use-price'
-
 const CartSidebarView: FC = () => {
   const [cart, setCart] = useState([])
   const [isEmpty, setEmpty] = useState(false)
@@ -35,29 +32,11 @@ const CartSidebarView: FC = () => {
     }
   }, [])
 
-  /* const { data, isEmpty } = useCart()
-  const { price: subTotal } = usePrice(
-    data && {
-      amount: data.base_amount,
-      currencyCode: data.currency.code,
-    }
-  )
-  const { price: total } = usePrice(
-    data && {
-      amount: data.cart_amount,
-      currencyCode: data.currency.code,
-    }
-  ) */
-
   const { closeSidebar } = useUI()
   const handleClose = () => closeSidebar()
 
-  // const items = data?.line_items.physical_items ?? []
-
   const error = null
   const success = null
-
-  console.log(cart)
 
   return (
     <div
@@ -122,7 +101,7 @@ const CartSidebarView: FC = () => {
               My Cart
             </h2>
             <ul className="py-6 space-y-6 sm:py-0 sm:space-y-0 sm:divide-y sm:divide-accents-3 border-t border-accents-3">
-              {cart.map((item) => (
+              {cart.map((item: any) => (
                 <CartItem
                   key={item._id}
                   item={item}
@@ -138,7 +117,7 @@ const CartSidebarView: FC = () => {
               <ul className="py-3">
                 <li className="flex justify-between py-1">
                   <span>Subtotal</span>
-                  {/* <span>{subTotal}</span> */}
+                  <span>00.00 €</span>
                 </li>
                 <li className="flex justify-between py-1">
                   <span>Taxes</span>
@@ -146,13 +125,12 @@ const CartSidebarView: FC = () => {
                 </li>
                 <li className="flex justify-between py-1">
                   <span>Estimated Shipping</span>
-                  <span className="font-bold tracking-wide">FREE</span>
+                  <span className="font-bold tracking-wide">00.00 €</span>
                 </li>
               </ul>
               <div className="flex justify-between border-t border-accents-3 py-3 font-bold mb-10">
                 <span>Total</span>
-                {/* <span>{total}</span> */}
-                <span>total</span>
+                <span>00.00 €</span>
               </div>
             </div>
             <Button href="/checkout" Component="a" width="100%">

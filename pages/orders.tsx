@@ -1,20 +1,8 @@
-import type { GetStaticPropsContext } from 'next'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
+// import type { GetStaticPropsContext } from 'next'
+
 import { Layout } from '@components/core'
 import { Container, Text } from '@components/ui'
 import { Bag } from '@components/icons'
-
-export async function getStaticProps({
-  preview,
-  locale,
-}: GetStaticPropsContext) {
-  const config = getConfig({ locale })
-  const { pages } = await getAllPages({ config, preview })
-  return {
-    props: { pages },
-  }
-}
 
 export default function Orders() {
   return (

@@ -1,26 +1,16 @@
-import type { GetStaticPropsContext } from 'next'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
-import useWishlist from '@bigcommerce/storefront-data-hooks/wishlist/use-wishlist'
+// import type { GetStaticPropsContext } from 'next'
+
 import { Layout } from '@components/core'
 import { Heart } from '@components/icons'
 import { Container, Text } from '@components/ui'
 import { WishlistCard } from '@components/wishlist'
 import { Transition } from '@headlessui/react'
 
-export async function getStaticProps({
-  preview,
-  locale,
-}: GetStaticPropsContext) {
-  const config = getConfig({ locale })
-  const { pages } = await getAllPages({ config, preview })
-  return {
-    props: { pages },
-  }
-}
-
 export default function Wishlist() {
-  const { data, isEmpty } = useWishlist({ includeProducts: true })
+  const data = {
+    items: [],
+  }
+  const isEmpty = true
 
   return (
     <Container>
@@ -54,7 +44,7 @@ export default function Wishlist() {
           ) : (
             <Transition show>
               {data &&
-                data.items?.map((item) => (
+                data.items.map((item: any) => (
                   <Transition.Child
                     enter="transition-opacity ease-linear duration-300"
                     enterFrom="opacity-0"

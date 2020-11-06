@@ -1,11 +1,10 @@
 import { FC, useEffect, useState, useCallback } from 'react'
+import { validate } from 'email-validator'
+
 import { Logo, Button, Input } from '@components/ui'
 import { useUI } from '@components/ui/context'
-import { validate } from 'email-validator'
-import { loginUser, getUser } from 'whitebrim'
 
-//! BIGCOMMERCE
-//import useLogin from '@bigcommerce/storefront-data-hooks/use-login'
+import { loginUser, getUser } from 'whitebrim'
 
 interface Props {}
 
@@ -18,8 +17,6 @@ const LoginView: FC<Props> = () => {
   const [dirty, setDirty] = useState(false)
   const [disabled, setDisabled] = useState(false)
   const { setModalView, closeModal } = useUI()
-
-  // const login = useLogin()
 
   const handleLogin = (e: React.SyntheticEvent<EventTarget>) => {
     e.preventDefault()
@@ -39,21 +36,14 @@ const LoginView: FC<Props> = () => {
       .then((response) => {
         getUser()
           .then((response) => {
-            console.log(response)
-            //! BETA
-            // const user = response.data;
-            // if (user.cart.length === 0) user.cart = auth.cart;
-            // getUserSuccess(user);
-
             setLoading(false)
-            setMessage('Login feito com sucesso')
+            setMessage('Success')
             setTimeout(() => {
               setMessage('')
             }, 2500)
             closeModal()
           })
           .catch((error) => {
-            console.log(error)
             setMessage('Error')
             setLoading(false)
           })

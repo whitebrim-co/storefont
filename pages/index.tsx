@@ -1,38 +1,66 @@
 import { useMemo } from 'react'
 import type { GetStaticPropsContext, InferGetStaticPropsType } from 'next'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllProducts from '@bigcommerce/storefront-data-hooks/api/operations/get-all-products'
-import getSiteInfo from '@bigcommerce/storefront-data-hooks/api/operations/get-site-info'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
 import rangeMap from '@lib/range-map'
+
 import { Layout } from '@components/core'
 import { Grid, Marquee, Hero } from '@components/ui'
 import { ProductCard } from '@components/product'
 import HomeAllProductsGrid from '@components/core/HomeAllProductsGrid'
 
+import { getItems } from 'whitebrim'
+
+const fetchData = async (data: {
+  currentPage: number
+  selectedPageSize: number
+  selectedFilterOption?: { name: null; id: null }
+  multi?: boolean
+}) => {
+  let filter = {}
+  let params = {
+    modelName: 'product',
+    filters: filter,
+    pagination: {
+      page: data.currentPage,
+      limit: data.selectedPageSize,
+    },
+  }
+  return getItems(params)
+    .then((res) => ({
+      items: res.data.results,
+      totalPages: res.data.total_pages,
+      error: false,
+    }))
+    .catch(() => ({
+      items: null,
+      totalPages: 0,
+      error: true,
+    }))
+}
+
 export async function getStaticProps({
   preview,
   locale,
 }: GetStaticPropsContext) {
-  const config = getConfig({ locale })
+  let payload1 = {
+    currentPage: 1,
+    selectedPageSize: 6,
+    selectedFilterOption: { name: null, id: null },
+    multi: false,
+  }
+  let payload2 = {
+    currentPage: 1,
+    selectedPageSize: 6,
+    selectedFilterOption: { name: null, id: null },
+    multi: false,
+  }
 
-  const { products: featuredProducts } = await getAllProducts({
-    variables: { field: 'featuredProducts', first: 6 },
-    config,
-    preview,
-  })
-  const { products: bestSellingProducts } = await getAllProducts({
-    variables: { field: 'bestSellingProducts', first: 6 },
-    config,
-    preview,
-  })
-  const { products: newestProducts } = await getAllProducts({
-    variables: { field: 'newestProducts', first: 12 },
-    config,
-    preview,
-  })
-  const { categories, brands } = await getSiteInfo({ config, preview })
-  const { pages } = await getAllPages({ config, preview })
+  const { items: featuredProducts } = await fetchData(payload1)
+  const { items: bestSellingProducts } = await fetchData(payload1)
+
+  const { items: newestProducts } = await fetchData(payload2)
+
+  const categories = null
+  const brands = null
 
   return {
     props: {
@@ -41,7 +69,6 @@ export async function getStaticProps({
       newestProducts,
       categories,
       brands,
-      pages,
     },
     revalidate: 10,
   }
@@ -65,7 +92,7 @@ export default function Home({
     return {
       featured: rangeMap(6, (i) => featuredProducts[i] ?? products.shift())
         .filter(nonNullable)
-        .sort((a, b) => a.node.prices.price.value - b.node.prices.price.value)
+        .sort((a, b) => a.price - b.price)
         .reverse(),
       bestSelling: rangeMap(
         6,
@@ -77,10 +104,10 @@ export default function Home({
   return (
     <div>
       <Grid>
-        {featured.slice(0, 3).map(({ node }, i) => (
+        {featured.slice(0, 3).map((item, i) => (
           <ProductCard
-            key={node.path}
-            product={node}
+            key={item.uri}
+            product={item}
             // The first image is the largest one in the grid
             imgWidth={i === 0 ? 1600 : 820}
             imgHeight={i === 0 ? 1600 : 820}
@@ -89,10 +116,10 @@ export default function Home({
         ))}
       </Grid>
       <Marquee variant="secondary">
-        {bestSelling.slice(3, 6).map(({ node }) => (
+        {bestSelling.slice(3, 6).map((item, i) => (
           <ProductCard
-            key={node.path}
-            product={node}
+            key={item.uri}
+            product={item}
             variant="slim"
             imgWidth={320}
             imgHeight={320}
@@ -110,10 +137,10 @@ export default function Home({
         ‘Natural’."
       />
       <Grid layout="B">
-        {featured.slice(3, 6).map(({ node }, i) => (
+        {featured.slice(3, 6).map((item, i) => (
           <ProductCard
-            key={node.path}
-            product={node}
+            key={item.uri}
+            product={item}
             // The second image is the largest one in the grid
             imgWidth={i === 1 ? 1600 : 820}
             imgHeight={i === 1 ? 1600 : 820}
@@ -121,10 +148,10 @@ export default function Home({
         ))}
       </Grid>
       <Marquee>
-        {bestSelling.slice(0, 3).map(({ node }) => (
+        {bestSelling.slice(0, 3).map((item, i) => (
           <ProductCard
-            key={node.path}
-            product={node}
+            key={item.uri}
+            product={item}
             variant="slim"
             imgWidth={320}
             imgHeight={320}
@@ -132,8 +159,8 @@ export default function Home({
         ))}
       </Marquee>
       <HomeAllProductsGrid
-        categories={categories}
-        brands={brands}
+        categories={categories ? categories : []}
+        brands={brands ? brands : []}
         newestProducts={newestProducts}
       />
     </div>

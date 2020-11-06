@@ -48,10 +48,10 @@ const Head: FC<Props> = ({ categories, brands, newestProducts }) => {
       </div>
       <div className="flex-1">
         <Grid layout="normal">
-          {newestProducts.map(({ node }: any) => (
+          {newestProducts.map((item: { uri: string }, i: any) => (
             <ProductCard
-              key={node.path}
-              product={node}
+              key={item.uri}
+              product={item}
               variant="simple"
               imgWidth={480}
               imgHeight={480}
