@@ -1,51 +1,35 @@
-import type { ProductNode } from '@bigcommerce/storefront-data-hooks/api/operations/get-product'
-
-export type SelectedOptions = {
-  size: string | null
-  color: string | null
-}
-
-export type ProductOption = {
-  displayName: string
-  values: any
-}
-
 // Returns the available options of a product
-export function getProductOptions(product: ProductNode) {
-  const options = product.productOptions.edges?.reduce<ProductOption[]>(
-    (arr, edge) => {
-      if (edge?.node.__typename === 'MultipleChoiceOption') {
-        arr.push({
-          displayName: edge.node.displayName.toLowerCase(),
-          values: edge.node.values.edges?.map((edge) => edge?.node),
-        })
+export function getItemVariants(product: any) {
+  let groups = {}
+
+  product.variant_options.forEach((mainVar) => {
+    // for each mainVar
+    if (mainVar.options[0]) {
+      // if has size
+      if (!groups[mainVar.options[0].option_name]) {
+        // if entry doesn't already exist create it
+        groups[mainVar.options[0].option_name] = []
       }
-      return arr
-    },
-    []
-  )
-
-  return options
-}
-
-// Finds a variant in the product that matches the selected options
-export function getCurrentVariant(product: ProductNode, opts: SelectedOptions) {
-  const variant = product.variants.edges?.find((edge) => {
-    const { node } = edge ?? {}
-
-    return Object.entries(opts).every(([key, value]) =>
-      node?.productOptions.edges?.find((edge) => {
-        if (
-          edge?.node.__typename === 'MultipleChoiceOption' &&
-          edge.node.displayName.toLowerCase() === key
-        ) {
-          return edge.node.values.edges?.find(
-            (valueEdge) => valueEdge?.node.label === value
-          )
-        }
-      })
-    )
+      if (mainVar.options[1]) {
+        // if color push it to the correct size variant
+        groups[mainVar.options[0].option_name].push({
+          variant_id: mainVar._id,
+          ...mainVar.options[1],
+        })
+      } else {
+        // else push only the variant_id *in case the variant only has size
+        groups[mainVar.options[0].option_name].push({ variant_id: mainVar._id })
+      }
+    }
   })
 
-  return variant
+  const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] // correct order
+  const sortedVariants = {}
+  sizes.forEach((size) => {
+    if (groups[size]) {
+      sortedVariants[size] = groups[size]
+    }
+  })
+
+  return sortedVariants
 }

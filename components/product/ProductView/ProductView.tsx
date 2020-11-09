@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { FC, useState, useEffect } from 'react'
 import cn from 'classnames'
 import Image from 'next/image'
 import { NextSeo } from 'next-seo'
@@ -10,11 +10,7 @@ import { Button, Container } from '@components/ui'
 import { HTMLContent } from '@components/core'
 // import WishlistButton from '@components/wishlist/WishlistButton'
 
-import {
-  // getCurrentVariant,
-  // getProductOptions,
-  SelectedOptions,
-} from '../helpers'
+import { getItemVariants } from '../helpers'
 
 import { addToCart } from 'whitebrim'
 
@@ -25,43 +21,96 @@ interface Props {
 }
 
 const ProductView: FC<Props> = ({ product }) => {
-  const { openSidebar } = useUI()
-  const options: any[] = []
+  const { openSidebar, setModalView } = useUI()
+
+  const variants = getItemVariants(product)
+  const [selectedSize, selectSize] = useState(null)
+
+  const [colors, setColors] = useState([])
+  const [selectedColor, selectColor] = useState(null)
+
   const [loading, setLoading] = useState(false)
-  const [choices, setChoices] = useState<SelectedOptions>({
-    size: null,
-    color: null,
-  })
+
+  useEffect(() => {
+    if (product.gallery.length > 0) {
+      product.gallery.find((photo) => {
+        if (photo.url !== product.photo.url) {
+          product.gallery.unshift(product.photo)
+        }
+      })
+    } else {
+      product.gallery.unshift(product.photo)
+    }
+  }, [])
 
   const addItemToCart = () => {
-    setLoading(true)
-    let submitValues = {
-      addons: [],
-      customizations: [],
-      model_id: product._id,
-      model_name: product.model_name,
-      quantity: 1,
-      userId: null, // USER ID
+    if (localStorage.getItem('wb_token')) {
+      setLoading(true)
+      let submitValues
+
+      if (
+        (selectedSize && selectedSize[0].variant_id && selectedColor) ||
+        (selectedSize && selectedSize[0].variant_id && !selectedColor)
+      ) {
+        submitValues = {
+          addons: [],
+          customizations: [],
+          model_id: product._id,
+          model_name: product.model_name,
+          quantity: 1,
+          variant: !selectedColor
+            ? selectedSize[0].variant_id
+            : selectedColor.variant_id, // SELECTED_VARIANT
+          userId: localStorage.getItem('wb_userId'), // USER ID
+        }
+      } else {
+        submitValues = {
+          addons: [],
+          customizations: [],
+          model_id: product._id,
+          model_name: product.model_name,
+          quantity: 1,
+          userId: localStorage.getItem('wb_userId'), // USER ID
+        }
+      }
+
+      addToCart(submitValues)
+        .then((response) => {
+          if (response.status === 200) {
+            openSidebar()
+            setLoading(false)
+          } else if (response.status === 304) {
+            setLoading(false)
+          }
+        })
+        .catch((err) => {
+          if (err && err.response && err.response.status === 304) {
+            setLoading(false)
+          } else {
+            setLoading(false)
+          }
+        })
+    } else {
+      setModalView('LOGIN_VIEW')
     }
-    addToCart(submitValues)
-      .then((response) => {
-        if (response.status === 200) {
-          openSidebar()
-          setLoading(false)
-        } else if (response.status === 304) {
-          setLoading(false)
-        }
-      })
-      .catch((err) => {
-        if (err && err.response && err.response.status === 304) {
-          setLoading(false)
-        } else {
-          setLoading(false)
-        }
-      })
   }
 
-  const variant = false
+  const selectMainVariant = (key) => {
+    selectColor(null)
+
+    variants[key].size_name = key
+    selectSize(variants[key])
+
+    if (variants[key][0].option_name) {
+      setColors(variants[key])
+    } else {
+      setColors([])
+    }
+  }
+
+  const selectMainColor = (color) => {
+    selectColor(color)
+  }
 
   return (
     <Container className="max-w-none w-full" clean>
@@ -114,50 +163,63 @@ const ProductView: FC<Props> = ({ product }) => {
 
         <div className={s.sidebar}>
           <section>
-            {options?.map((opt: any) => (
-              <div className="pb-4" key={opt.displayName}>
-                <h2 className="uppercase font-medium">{opt.displayName}</h2>
-                <div className="flex flex-row py-4">
-                  {opt.values.map((v: any, i: number) => {
-                    const active = (choices as any)[opt.displayName]
-
-                    return (
-                      <Swatch
-                        key={`${v.entityId}-${i}`}
-                        active={v.label === active}
-                        variant={opt.displayName}
-                        color={v.hexColors ? v.hexColors[0] : ''}
-                        label={v.label}
-                        onClick={() => {
-                          setChoices((choices) => {
-                            return {
-                              ...choices,
-                              [opt.displayName]: v.label,
-                            }
-                          })
-                        }}
-                      />
-                    )
-                  })}
-                </div>
+            <div className="pb-4">
+              {Object.keys(variants).length > 0 && (
+                <h2 className="uppercase font-medium">Size</h2>
+              )}
+              <div className="flex flex-row py-4">
+                {Object.keys(variants).map((key: any, i: number) => {
+                  return (
+                    <Swatch
+                      key={`${key}-${i}`}
+                      active={selectedSize && selectedSize.size_name === key}
+                      variant={'size'}
+                      color={''}
+                      label={`${key}`}
+                      onClick={() => selectMainVariant(key)}
+                    />
+                  )
+                })}
               </div>
-            ))}
-
+            </div>
+            <div className="pb-4">
+              {colors.length > 0 && (
+                <h2 className="uppercase font-medium">Color</h2>
+              )}
+              <div className="flex flex-row py-4">
+                {colors.map((color: any, i: number) => {
+                  return (
+                    <Swatch
+                      key={`${color._id}-${i}`}
+                      active={selectedColor && selectedColor._id === color._id}
+                      variant={'size'}
+                      color={color.options_name}
+                      label={color.option_name}
+                      onClick={() => selectMainColor(color)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
             <div className="pb-14 break-words w-full max-w-xl">
               <HTMLContent html={product.description} />
             </div>
           </section>
           <div>
-            <Button
-              aria-label="Add to Cart"
-              type="button"
-              className={s.button}
-              onClick={addItemToCart}
-              loading={loading}
-              disabled={!variant} // if (no variant selected and variantLength > 0)
-            >
-              Add to Cart
-            </Button>
+            {(selectedSize && !selectedSize[0]._id) ||
+            (selectedSize && selectedSize[0]._id && selectedColor) ||
+            Object.keys(variants).length === 0 ? (
+              <Button
+                aria-label="Add to Cart"
+                type="button"
+                className={s.button}
+                onClick={addItemToCart}
+                loading={loading}
+                disabled={loading} // if (no variant selected and variantLength > 0)
+              >
+                Add to Cart
+              </Button>
+            ) : null}
           </div>
         </div>
 

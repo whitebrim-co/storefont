@@ -112,6 +112,7 @@ function uiReducer(state: State, action: Action) {
       }
     }
     case 'SET_MODAL_VIEW': {
+      console.log(action.view)
       return {
         ...state,
         modalView: action.view,
