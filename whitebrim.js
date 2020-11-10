@@ -563,11 +563,14 @@ export const getItems = (options) =>
             }
         }
 
+        console.log(options)
+
         if (options.pagination) filterString += "&limit=".concat(options.pagination.limit, "&page=").concat(options.pagination.page, "&");
+        if (options.q) filterString += `q=${options.q}`
 
         axios
             .get(`${process.env.NEXT_PUBLIC_WB_DOMAIN}/api/model/${process.env.NEXT_PUBLIC_WB_PROJECT_ID}/${options.modelName}${filterString}`, {})
-            .then((response) => {
+            .then((response) => {                
                 resolve(response);
             })
             .catch((err) => {

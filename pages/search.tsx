@@ -1,4 +1,5 @@
 import cn from 'classnames'
+import { useState } from 'react'
 import type { GetStaticPropsContext, InferGetStaticPropsType } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
@@ -19,7 +20,39 @@ import {
   useSearchMeta,
 } from '@lib/search'
 
-export async function getStaticProps({
+import { getItems } from 'whitebrim'
+
+const fetchData = (data: {
+  currentPage: number
+  selectedPageSize: number
+  selectedFilterOption?: { name: null; id: null }
+  multi?: boolean
+  q?: string
+}) => {
+  let filter = {}
+  let params = {
+    modelName: 'product',
+    q: data.q ? data.q : null, //* search
+    filters: filter,
+    pagination: {
+      page: data.currentPage,
+      limit: data.selectedPageSize,
+    },
+  }
+  return getItems(params)
+    .then((res) => ({
+      items: res.data.results,
+      totalPages: res.data.total_pages,
+      error: false,
+    }))
+    .catch(() => ({
+      items: null,
+      totalPages: 0,
+      error: true,
+    }))
+}
+
+/* export async function getStaticProps({
   preview,
   locale,
 }: GetStaticPropsContext) {
@@ -30,7 +63,7 @@ export async function getStaticProps({
   return {
     props: { pages, categories, brands },
   }
-}
+} */
 
 const SORT = Object.entries({
   'latest-desc': 'Latest arrivals',
@@ -39,10 +72,9 @@ const SORT = Object.entries({
   'price-desc': 'Price: High to low',
 })
 
-export default function Search({
-  categories,
-  brands,
-}: InferGetStaticPropsType<typeof getStaticProps>) {
+export default function Search({}: // categories,
+// brands,
+InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter()
   const { asPath } = router
   const { q, sort } = router.query
@@ -50,27 +82,45 @@ export default function Search({
   // in the same way of products, it's better to ignore the search input if one
   // of those is selected
   const query = filterQuery({ sort })
+  const [currentQuery, setQuery] = useState(null)
+  const [data, setData] = useState(null)
 
   const { pathname, category, brand } = useSearchMeta(asPath)
-  const activeCategory = categories.find(
+
+  /* const activeCategory = categories.find(
     (cat) => getSlug(cat.path) === category
   )
   const activeBrand = brands.find(
     (b) => getSlug(b.node.path) === `brands/${brand}`
-  )?.node
+  )?.node */
 
-  const { data } = useSearch({
-    search: typeof q === 'string' ? q : '',
-    categoryId: activeCategory?.entityId,
-    brandId: activeBrand?.entityId,
-    sort: typeof sort === 'string' ? sort : '',
-  })
+  const activeCategory = null
+  const activeBrand = null
+
+  if (!data || q !== currentQuery) {
+    let payload = {
+      currentPage: 1,
+      selectedPageSize: 150,
+      selectedFilterOption: { name: null, id: null },
+      multi: false,
+      q: typeof q === 'string' ? q : '',
+    }
+    fetchData(payload)
+      .then((res) => {
+        setQuery(q)
+        setData(res)
+      })
+      .catch((error) => {
+        setQuery(q)
+        setData(null)
+      })
+  }
 
   return (
     <Container>
       <div className="grid grid-cols-12 gap-4 mt-3 mb-20">
         <div className="col-span-2">
-          <ul className="mb-10">
+          {/* <ul className="mb-10">
             <li className="py-1 text-base font-bold tracking-wide">
               <Link href={{ pathname: getCategoryPath('', brand), query }}>
                 <a>All Categories</a>
@@ -117,7 +167,7 @@ export default function Search({
                 </Link>
               </li>
             ))}
-          </ul>
+          </ul> */}
         </div>
         <div className="col-span-8">
           {(q || activeCategory || activeBrand) && (
@@ -126,11 +176,11 @@ export default function Search({
                 <>
                   <span
                     className={cn('animated', {
-                      fadeIn: data.found,
-                      hidden: !data.found,
+                      fadeIn: data,
+                      hidden: !data,
                     })}
                   >
-                    Showing {data.products.length} results{' '}
+                    Showing {data.items.length} results{' '}
                     {q && (
                       <>
                         for "<strong>{q}</strong>"
@@ -139,8 +189,8 @@ export default function Search({
                   </span>
                   <span
                     className={cn('animated', {
-                      fadeIn: !data.found,
-                      hidden: data.found,
+                      fadeIn: !data,
+                      hidden: data,
                     })}
                   >
                     {q ? (
@@ -167,12 +217,12 @@ export default function Search({
 
           {data ? (
             <Grid layout="normal">
-              {data.products.map(({ node }) => (
+              {data.items.map((item: any) => (
                 <ProductCard
                   variant="simple"
-                  key={node.path}
+                  key={item.uri}
                   className="animated fadeIn"
-                  product={node}
+                  product={item}
                   imgWidth={480}
                   imgHeight={480}
                 />
