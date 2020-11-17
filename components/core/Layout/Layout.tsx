@@ -17,7 +17,7 @@ interface Props {
   }
 }
 
-const Layout: FC<Props> = ({ children, pageProps }) => {
+const Layout: FC<Props> = ({ children }) => {
   const {
     displaySidebar,
     displayModal,
@@ -66,7 +66,7 @@ const Layout: FC<Props> = ({ children, pageProps }) => {
           </Container>
         </header>
         <main className="fit">{children}</main>
-        <Footer pages={pageProps.pages} />
+        <Footer />
         <Sidebar open={displaySidebar} onClose={closeSidebar}>
           <CartSidebarView />
         </Sidebar>

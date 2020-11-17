@@ -109,8 +109,8 @@ const ProductView: FC<Props> = ({ product }) => {
   }
 
   // Set locale to show product info in the correct language
-  const currLocaleSplit = currLocale.split('_')
-  const localeSplit = locale?.split('-')
+  const currLocaleSplit: any = currLocale.split('_')
+  const localeSplit: any = locale?.split('-')
   if (localeSplit[0] !== currLocaleSplit[0]) {
     setLocale(locale === 'es' ? 'es_ES' : 'en_US')
   }
@@ -194,7 +194,7 @@ const ProductView: FC<Props> = ({ product }) => {
                     <Swatch
                       key={`${key}-${i}`}
                       active={selectedSize && selectedSize.size_name === key}
-                      variant={'size'}
+                      variant={'slim'}
                       color={''}
                       label={`${key}`}
                       onClick={() => selectMainVariant(key)}
@@ -213,7 +213,7 @@ const ProductView: FC<Props> = ({ product }) => {
                     <Swatch
                       key={`${color._id}-${i}`}
                       active={selectedColor && selectedColor._id === color._id}
-                      variant={'size'}
+                      variant={'slim'}
                       color={color.options_name}
                       label={color.option_name}
                       onClick={() => selectMainColor(color)}

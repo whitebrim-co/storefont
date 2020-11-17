@@ -1,8 +1,8 @@
 // Returns the available options of a product
 export function getItemVariants(product: any) {
-  let groups = {}
+  let groups: any = {}
 
-  product.variant_options.forEach((mainVar) => {
+  product.variant_options && product.variant_options.forEach((mainVar: any) => {
     // for each mainVar
     if (mainVar.options[0]) {
       // if has size
@@ -24,7 +24,7 @@ export function getItemVariants(product: any) {
   })
 
   const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'] // correct order
-  const sortedVariants = {}
+  const sortedVariants : any = {}
   sizes.forEach((size) => {
     if (groups[size]) {
       sortedVariants[size] = groups[size]
