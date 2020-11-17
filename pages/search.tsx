@@ -3,10 +3,7 @@ import { useState } from 'react'
 import type { GetStaticPropsContext, InferGetStaticPropsType } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { getConfig } from '@bigcommerce/storefront-data-hooks/api'
-import getAllPages from '@bigcommerce/storefront-data-hooks/api/operations/get-all-pages'
-import getSiteInfo from '@bigcommerce/storefront-data-hooks/api/operations/get-site-info'
-import useSearch from '@bigcommerce/storefront-data-hooks/products/use-search'
+
 import { Layout } from '@components/core'
 import { ProductCard } from '@components/product'
 import { Container, Grid, Skeleton } from '@components/ui'
@@ -22,18 +19,18 @@ import {
 
 import { getItems } from 'whitebrim'
 
-const fetchData = (data: {
+const fetchItems = (data: {
+  modelName: string
   currentPage: number
   selectedPageSize: number
-  selectedFilterOption?: { name: null; id: null }
-  multi?: boolean
+  filter: any
   q?: string
+  multi?: boolean
 }) => {
-  let filter = {}
   let params = {
-    modelName: 'product',
+    modelName: data.modelName,
+    filters: data.filter,
     q: data.q ? data.q : null, //* search
-    filters: filter,
     pagination: {
       page: data.currentPage,
       limit: data.selectedPageSize,
@@ -52,125 +49,200 @@ const fetchData = (data: {
     }))
 }
 
-/* export async function getStaticProps({
-  preview,
-  locale,
-}: GetStaticPropsContext) {
-  const config = getConfig({ locale })
-  const { pages } = await getAllPages({ config, preview })
-  const { categories, brands } = await getSiteInfo({ config, preview })
+export async function getStaticProps({}: GetStaticPropsContext) {
+  let categoriesItems = {
+    modelName: 'categories',
+    currentPage: 1,
+    selectedPageSize: 6,
+    filter: {},
+    multi: false,
+  }
+  let designersItems = {
+    modelName: 'designers',
+    currentPage: 1,
+    selectedPageSize: 6,
+    filter: {},
+    multi: false,
+  }
+
+  const { items: categories } = await fetchItems(categoriesItems)
+  const { items: designers } = await fetchItems(designersItems)
 
   return {
-    props: { pages, categories, brands },
+    props: { categories, designers },
   }
-} */
+}
 
-const SORT = Object.entries({
+/* const SORT = Object.entries({
   'latest-desc': 'Latest arrivals',
   'trending-desc': 'Trending',
   'price-asc': 'Price: Low to high',
   'price-desc': 'Price: High to low',
-})
+}) */
 
-export default function Search({}: // categories,
-// brands,
-InferGetStaticPropsType<typeof getStaticProps>) {
+export default function Search({
+  categories,
+  designers,
+}: InferGetStaticPropsType<typeof getStaticProps>) {
   const router = useRouter()
-  const { asPath } = router
-  const { q, sort } = router.query
+  const { q } = router.query
   // `q` can be included but because categories and designers can't be searched
   // in the same way of products, it's better to ignore the search input if one
   // of those is selected
-  const query = filterQuery({ sort })
-  const [currentQuery, setQuery] = useState(null)
-  const [data, setData] = useState(null)
+  const [currentQuery, setQuery] = useState<any>(null)
+  const [currentCat, setCat] = useState<any>(null)
+  const [currentDesigner, setDesigner] = useState<any>(null)
 
-  const { pathname, category, brand } = useSearchMeta(asPath)
+  const [data, setData] = useState<any>(null)
 
-  /* const activeCategory = categories.find(
-    (cat) => getSlug(cat.path) === category
-  )
-  const activeBrand = brands.find(
-    (b) => getSlug(b.node.path) === `brands/${brand}`
-  )?.node */
+  const renderList = (cat: null | undefined, designer: null | undefined) => {
+    let filter: any = {}
 
-  const activeCategory = null
-  const activeBrand = null
+    if (cat) {
+      filter['category'] = cat
+    }
+    if (designer) {
+      filter['designers'] = designer
+    }
 
-  if (!data || q !== currentQuery) {
     let payload = {
+      modelName: 'product',
       currentPage: 1,
       selectedPageSize: 150,
-      selectedFilterOption: { name: null, id: null },
-      multi: false,
+      filter: filter,
       q: typeof q === 'string' ? q : '',
+      multi: false,
     }
-    fetchData(payload)
+
+    fetchItems(payload)
       .then((res) => {
         setQuery(q)
         setData(res)
       })
       .catch((error) => {
-        setQuery(q)
         setData(null)
       })
+  }
+
+  if (!data || q !== currentQuery) {
+    renderList(null, null)
   }
 
   return (
     <Container>
       <div className="grid grid-cols-12 gap-4 mt-3 mb-20">
         <div className="col-span-2">
-          {/* <ul className="mb-10">
+          <ul className="mb-10">
             <li className="py-1 text-base font-bold tracking-wide">
-              <Link href={{ pathname: getCategoryPath('', brand), query }}>
-                <a>All Categories</a>
-              </Link>
+              <a
+                style={{ cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.preventDefault()
+
+                  router.push(
+                    {
+                      pathname: `/search`,
+                    },
+                    undefined,
+                    { shallow: true }
+                  )
+                  setCat(null)
+                  setDesigner(null)
+                  renderList(null, null)
+                }}
+              >
+                All Categories
+              </a>
             </li>
-            {categories.map((cat) => (
+            {categories.map((category: any) => (
               <li
-                key={cat.path}
+                key={category._id}
                 className={cn('py-1 text-accents-8', {
-                  underline: activeCategory?.entityId === cat.entityId,
+                  underline: currentCat === category._id,
                 })}
               >
-                <Link
-                  href={{
-                    pathname: getCategoryPath(cat.path, brand),
-                    query,
+                <a
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault()
+
+                    const cat = category._id
+
+                    router.push(
+                      {
+                        pathname: `/search`,
+                        query: cat ? { cat } : {},
+                      },
+                      undefined,
+                      { shallow: true }
+                    )
+                    setCat(cat)
+                    setDesigner(null)
+                    renderList(cat, null)
                   }}
                 >
-                  <a>{cat.name}</a>
-                </Link>
+                  {category.name}
+                </a>
               </li>
             ))}
           </ul>
           <ul>
             <li className="py-1 text-base font-bold tracking-wide">
-              <Link href={{ pathname: getDesignerPath('', category), query }}>
-                <a>All Designers</a>
-              </Link>
+              <a
+                style={{ cursor: 'pointer' }}
+                onClick={(e) => {
+                  e.preventDefault()
+
+                  router.push(
+                    {
+                      pathname: `/search`,
+                    },
+                    undefined,
+                    { shallow: true }
+                  )
+                  setDesigner(null)
+                  setCat(null)
+                  renderList(null, null)
+                }}
+              >
+                All Designers
+              </a>
             </li>
-            {brands.flatMap(({ node }) => (
+            {designers.flatMap((brand: any) => (
               <li
-                key={node.path}
+                key={brand.path}
                 className={cn('py-1 text-accents-8', {
-                  underline: activeBrand?.entityId === node.entityId,
+                  underline: currentDesigner === brand._id,
                 })}
               >
-                <Link
-                  href={{
-                    pathname: getDesignerPath(node.path, category),
-                    query,
+                <a
+                  style={{ cursor: 'pointer' }}
+                  onClick={(e) => {
+                    e.preventDefault()
+
+                    const designer = brand._id
+
+                    router.push(
+                      {
+                        pathname: `/search`,
+                        query: designer ? { designer } : {},
+                      },
+                      undefined,
+                      { shallow: true }
+                    )
+                    setCat(null)
+                    setDesigner(designer)
+                    renderList(null, designer)
                   }}
                 >
-                  <a>{node.name}</a>
-                </Link>
+                  {brand.name}
+                </a>
               </li>
             ))}
-          </ul> */}
+          </ul>
         </div>
         <div className="col-span-8">
-          {(q || activeCategory || activeBrand) && (
+          {(q || currentCat || currentDesigner) && (
             <div className="mb-12 transition ease-in duration-75">
               {data ? (
                 <>
@@ -242,7 +314,7 @@ InferGetStaticPropsType<typeof getStaticProps>) {
         </div>
         <div className="col-span-2">
           <ul>
-            <li className="py-1 text-base font-bold tracking-wide">Sort</li>
+            {/* <li className="py-1 text-base font-bold tracking-wide">Sort</li>
             <li
               className={cn('py-1 text-accents-8', {
                 underline: !sort,
@@ -263,7 +335,7 @@ InferGetStaticPropsType<typeof getStaticProps>) {
                   <a>{text}</a>
                 </Link>
               </li>
-            ))}
+            ))} */}
           </ul>
         </div>
       </div>

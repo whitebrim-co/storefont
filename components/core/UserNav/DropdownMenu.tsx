@@ -6,7 +6,6 @@ import s from './DropdownMenu.module.css'
 import { Moon, Sun } from '@components/icons'
 import { useUI } from '@components/ui/context'
 import { Menu, Transition } from '@headlessui/react'
-import useLogout from '@bigcommerce/storefront-data-hooks/use-logout'
 import { useRouter } from 'next/router'
 
 interface DropdownMenuProps {
@@ -30,10 +29,15 @@ const LINKS = [
 
 const DropdownMenu: FC<DropdownMenuProps> = ({ open = false }) => {
   const { theme, setTheme } = useTheme()
-  const logout = useLogout()
   const { pathname } = useRouter()
+  const { closeSidebarIfPresent, setUser } = useUI()
 
-  const { closeSidebarIfPresent } = useUI()
+  const logout = () => {
+    localStorage.removeItem('wb_userId')
+    localStorage.removeItem('wb_token')
+    localStorage.removeItem('wb_token_expiration')
+    setUser(null)
+  }
 
   return (
     <Transition

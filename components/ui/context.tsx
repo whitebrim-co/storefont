@@ -9,6 +9,7 @@ export interface State {
   displayToast: boolean
   modalView: string
   toastText: string
+  user: any
 }
 
 const initialState = {
@@ -18,6 +19,7 @@ const initialState = {
   modalView: 'LOGIN_VIEW',
   displayToast: false,
   toastText: '',
+  user: null,
 }
 
 type Action =
@@ -53,9 +55,14 @@ type Action =
       type: 'SET_MODAL_VIEW'
       view: MODAL_VIEWS
     }
+  | {
+      type: 'SET_USER'
+      payload: payload
+    }
 
 type MODAL_VIEWS = 'SIGNUP_VIEW' | 'LOGIN_VIEW' | 'FORGOT_VIEW'
 type ToastText = string
+type payload = object
 
 export const UIContext = React.createContext<State | any>(initialState)
 
@@ -112,7 +119,6 @@ function uiReducer(state: State, action: Action) {
       }
     }
     case 'SET_MODAL_VIEW': {
-      console.log(action.view)
       return {
         ...state,
         modalView: action.view,
@@ -122,6 +128,12 @@ function uiReducer(state: State, action: Action) {
       return {
         ...state,
         toastText: action.text,
+      }
+    }
+    case 'SET_USER': {
+      return {
+        ...state,
+        user: action.payload,
       }
     }
   }
@@ -151,6 +163,8 @@ export const UIProvider: FC = (props) => {
   const setModalView = (view: MODAL_VIEWS) =>
     dispatch({ type: 'SET_MODAL_VIEW', view })
 
+  const setUser = (payload: any) => dispatch({ type: 'SET_USER', payload })
+
   const value = useMemo(
     () => ({
       ...state,
@@ -165,6 +179,7 @@ export const UIProvider: FC = (props) => {
       setModalView,
       openToast,
       closeToast,
+      setUser,
     }),
     [state]
   )

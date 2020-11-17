@@ -19,7 +19,7 @@ const SignUpView: FC<Props> = () => {
   const [message, setMessage] = useState('')
   const [dirty, setDirty] = useState(false)
   const [disabled, setDisabled] = useState(false)
-  const { setModalView, closeModal } = useUI()
+  const { setModalView, closeModal, setUser } = useUI()
 
   const handleSignup = async (e: React.SyntheticEvent<EventTarget>) => {
     e.preventDefault()
@@ -36,6 +36,27 @@ const SignUpView: FC<Props> = () => {
       },
       email: email,
       password: password,
+      shipping_address: {
+        name: 'test',
+        street1: 'test',
+        street2: 'test',
+        code: 'test',
+        city: 'test',
+        country: 'PT',
+      },
+      billing_address: {
+        name: 'test',
+        street1: 'test',
+        street2: 'test',
+        code: 'test',
+        city: 'test',
+        country: 'PT',
+      },
+      custom: {
+        telephone: 'test',
+        NIF: 'test',
+      },
+      cart_items: [],
     }
 
     setLoading(true)
@@ -45,6 +66,8 @@ const SignUpView: FC<Props> = () => {
           .then((response) => {
             setLoading(false)
             setMessage('Success')
+            //* Context
+            setUser(response.data)
             setTimeout(() => {
               setMessage('')
             }, 2500)

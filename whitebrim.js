@@ -327,6 +327,7 @@ export const getUser = (options) =>
                 },
             })
             .then((response) => {
+                localStorage.setItem("wb_userId", response.data._id);
                 response.data.token = localStorage.getItem("wb_token");
                 resolve(response);
             })
@@ -562,9 +563,7 @@ export const getItems = (options) =>
                 i++;
             }
         }
-
-        console.log(options)
-
+        
         if (options.pagination) filterString += "&limit=".concat(options.pagination.limit, "&page=").concat(options.pagination.page, "&");
         if (options.q) filterString += `q=${options.q}`
 

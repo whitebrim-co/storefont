@@ -9,41 +9,41 @@ import { useUI } from '@components/ui/context'
 import CartItem from '../CartItem'
 import s from './CartSidebarView.module.css'
 
-import { getUser } from 'whitebrim'
+import { goToCheckoutPage } from 'whitebrim'
 
 const CartSidebarView: FC = () => {
-  const [cart, setCart] = useState([])
-  const [isEmpty, setEmpty] = useState(false)
-  const [cartLoaded, setCartLoaded] = useState(false)
-
-  useEffect(() => {
-    if (!cartLoaded) {
-      getUser()
-        .then((response) => {
-          const user = response.data
-          if (user.cart.length <= 0) {
-            setEmpty(true)
-          }
-          setCart(user.cart)
-        })
-        .catch((err) => {
-          console.log(err.response)
-        })
-    }
-  }, [])
-
-  const { closeSidebar } = useUI()
+  const { closeSidebar, user, setUser } = useUI()
   const handleClose = () => closeSidebar()
 
-  const error = null
-  const success = null
+  const goToCheckout = () => {
+    goToCheckoutPage()
+      .then((response) => {
+        window.location.replace(
+          `/checkout/?linkRef=${response.data.linkRef}&deploymentId=${process.env.NEXT_PUBLIC_WB_DEPLOYMENT_ID}`
+        )
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+  }
+
+  let subTotal = 0
+  if (user) {
+    user.cart.forEach((cartItem: any) => {
+      if (cartItem.discount && cartItem.discount.active) {
+        subTotal += cartItem.discount.finalPrice
+      } else if (!cartItem.discount || !cartItem.discount.active) {
+        subTotal += cartItem.price * cartItem.quantity
+      }
+    })
+  }
 
   return (
     <div
       className={cn(s.root, {
-        [s.empty]: error,
-        [s.empty]: success,
-        [s.empty]: isEmpty,
+        [s.empty]: null,
+        [s.empty]: null,
+        [s.empty]: !user || (user && user.cart.length === 0),
       })}
     >
       <header className="px-4 pt-6 pb-4 sm:px-6">
@@ -63,7 +63,7 @@ const CartSidebarView: FC = () => {
         </div>
       </header>
 
-      {isEmpty ? (
+      {!user || (user && user.cart.length === 0) ? (
         <div className="flex-1 px-4 flex flex-col justify-center items-center">
           <span className="border border-dashed border-primary rounded-full flex items-center justify-center w-16 h-16 p-12 bg-secondary text-secondary">
             <Bag className="absolute" />
@@ -101,14 +101,16 @@ const CartSidebarView: FC = () => {
               My Cart
             </h2>
             <ul className="py-6 space-y-6 sm:py-0 sm:space-y-0 sm:divide-y sm:divide-accents-3 border-t border-accents-3">
-              {cart.map((item: any) => (
-                <CartItem
-                  key={item._id}
-                  item={item}
-                  // currencyCode={data?.currency.code!}
-                  currencyCode={'€'}
-                />
-              ))}
+              {user &&
+                user.cart.map((item: any) => (
+                  <CartItem
+                    user={user}
+                    setUser={setUser}
+                    key={item.id}
+                    item={item}
+                    currencyCode={'€'}
+                  />
+                ))}
             </ul>
           </div>
 
@@ -117,23 +119,19 @@ const CartSidebarView: FC = () => {
               <ul className="py-3">
                 <li className="flex justify-between py-1">
                   <span>Subtotal</span>
-                  <span>00.00 €</span>
-                </li>
-                <li className="flex justify-between py-1">
-                  <span>Taxes</span>
-                  <span>Calculated at checkout</span>
+                  <span>{subTotal.toFixed(2)} €</span>
                 </li>
                 <li className="flex justify-between py-1">
                   <span>Estimated Shipping</span>
-                  <span className="font-bold tracking-wide">00.00 €</span>
+                  <span className="font-bold tracking-wide">0.00 €</span>
                 </li>
               </ul>
               <div className="flex justify-between border-t border-accents-3 py-3 font-bold mb-10">
                 <span>Total</span>
-                <span>00.00 €</span>
+                <span>{subTotal.toFixed(2)} €</span>
               </div>
             </div>
-            <Button href="/checkout" Component="a" width="100%">
+            <Button onClick={() => goToCheckout()} Component="a" width="100%">
               Proceed to Checkout
             </Button>
           </div>

@@ -9,15 +9,32 @@ import HomeAllProductsGrid from '@components/core/HomeAllProductsGrid'
 
 import { getItems } from 'whitebrim'
 
-const fetchData = async (data: {
+const fetchItems = async (data: {
+  modelName: string
   currentPage: number
   selectedPageSize: number
-  selectedFilterOption?: { name: null; id: null }
+  filterOption: {
+    name: any
+    id: any
+  }
+  filterOption2: {
+    name: any
+    id: any
+  }
   multi?: boolean
 }) => {
-  let filter = {}
+  let filter: any = {}
+
+  if (data.filterOption && data.filterOption.name && data.filterOption.id) {
+    filter[data.filterOption.name] = data.filterOption.id
+  }
+
+  if (data.filterOption2 && data.filterOption2.name && data.filterOption2.id) {
+    filter[data.filterOption2.name] = data.filterOption2.id
+  }
+
   let params = {
-    modelName: 'product',
+    modelName: data.modelName,
     filters: filter,
     pagination: {
       page: data.currentPage,
@@ -37,30 +54,55 @@ const fetchData = async (data: {
     }))
 }
 
-export async function getStaticProps({
-  preview,
-  locale,
-}: GetStaticPropsContext) {
-  let payload1 = {
+export async function getStaticProps({}: GetStaticPropsContext) {
+  let featuredItems = {
+    modelName: 'product',
     currentPage: 1,
     selectedPageSize: 6,
-    selectedFilterOption: { name: null, id: null },
+    filterOption: { name: 'isFeatured', id: true },
+    filterOption2: { name: null, id: null },
     multi: false,
   }
-  let payload2 = {
+  let bestSellingItems = {
+    modelName: 'product',
     currentPage: 1,
     selectedPageSize: 6,
-    selectedFilterOption: { name: null, id: null },
+    filterOption: { name: 'isBestSelling', id: true },
+    filterOption2: { name: null, id: null },
+    multi: false,
+  }
+  let newestItems = {
+    modelName: 'product',
+    currentPage: 1,
+    selectedPageSize: 6,
+    filterOption: { name: 'order_by', id: 'createdAt' },
+    filterOption2: { name: 'order', id: 'asc' },
+    multi: true,
+  }
+
+  const { items: featuredProducts } = await fetchItems(featuredItems)
+  const { items: bestSellingProducts } = await fetchItems(bestSellingItems)
+  const { items: newestProducts } = await fetchItems(newestItems)
+
+  let categoriesItems = {
+    modelName: 'categories',
+    currentPage: 1,
+    selectedPageSize: 6,
+    filterOption: { name: null, id: null },
+    filterOption2: { name: null, id: null },
+    multi: false,
+  }
+  let designersItems = {
+    modelName: 'designers',
+    currentPage: 1,
+    selectedPageSize: 6,
+    filterOption: { name: null, id: null },
+    filterOption2: { name: null, id: null },
     multi: false,
   }
 
-  const { items: featuredProducts } = await fetchData(payload1)
-  const { items: bestSellingProducts } = await fetchData(payload1)
-
-  const { items: newestProducts } = await fetchData(payload2)
-
-  const categories = null
-  const brands = null
+  const { items: categories } = await fetchItems(categoriesItems)
+  const { items: designers } = await fetchItems(designersItems)
 
   return {
     props: {
@@ -68,7 +110,7 @@ export async function getStaticProps({
       bestSellingProducts,
       newestProducts,
       categories,
-      brands,
+      designers,
     },
     revalidate: 10,
   }
@@ -81,7 +123,7 @@ export default function Home({
   bestSellingProducts,
   newestProducts,
   categories,
-  brands,
+  designers,
 }: InferGetStaticPropsType<typeof getStaticProps>) {
   const { featured, bestSelling } = useMemo(() => {
     // Create a copy of products that we can mutate
@@ -160,7 +202,7 @@ export default function Home({
       </Marquee>
       <HomeAllProductsGrid
         categories={categories ? categories : []}
-        brands={brands ? brands : []}
+        brands={designers ? designers : []}
         newestProducts={newestProducts}
       />
     </div>

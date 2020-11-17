@@ -4,7 +4,7 @@ import Link from 'next/link'
 import s from './ProductCard.module.css'
 
 import { EnhancedImage } from '@components/core'
-// import WishlistButton from '@components/wishlist/WishlistButton'
+import WishlistButton from '@components/wishlist/WishlistButton'
 
 interface Props {
   className?: string
@@ -56,11 +56,11 @@ const ProductCard: FC<Props> = ({
                 </h3>
                 <span className={s.productPrice}>{p.price.toFixed(2)} €</span>
               </div>
-              {/* <WishlistButton
+              <WishlistButton
                 className={s.wishlistButton}
                 productId={p._id}
                 variant={null}
-              /> */}
+              />
             </div>
             <div className={s.imageContainer}>
               <EnhancedImage

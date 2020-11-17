@@ -4,7 +4,7 @@ import { validate } from 'email-validator'
 import { Logo, Button, Input } from '@components/ui'
 import { useUI } from '@components/ui/context'
 
-import { loginUser, getUser } from 'whitebrim'
+import { loginUser, getUser, setUser } from 'whitebrim'
 
 interface Props {}
 
@@ -16,7 +16,7 @@ const LoginView: FC<Props> = () => {
   const [message, setMessage] = useState('')
   const [dirty, setDirty] = useState(false)
   const [disabled, setDisabled] = useState(false)
-  const { setModalView, closeModal } = useUI()
+  const { setModalView, closeModal, setUser } = useUI()
 
   const handleLogin = (e: React.SyntheticEvent<EventTarget>) => {
     e.preventDefault()
@@ -37,19 +37,20 @@ const LoginView: FC<Props> = () => {
         getUser()
           .then((response) => {
             setLoading(false)
-            setMessage('Success')
+            //* Context
+            setUser(response.data)
             setTimeout(() => {
               setMessage('')
             }, 2500)
             closeModal()
           })
           .catch((error) => {
-            setMessage('Error')
+            setMessage('Invalid email or password')
             setLoading(false)
           })
       })
       .catch(({ errors }) => {
-        setMessage('Error')
+        setMessage('Invalid email or password')
         setLoading(false)
       })
   }

@@ -11,12 +11,13 @@ import { ProductView } from '@components/product'
 import { getItems, getItemByUri } from 'whitebrim'
 
 const getAllModels = async (data: {
-  currentPage: any
-  selectedPageSize: any
+  modelName: string
+  currentPage: number
+  selectedPageSize: number
 }) => {
   let filter = {}
   let params = {
-    modelName: 'product',
+    modelName: data.modelName,
     filters: filter,
     pagination: {
       page: data.currentPage,
@@ -25,12 +26,12 @@ const getAllModels = async (data: {
   }
 
   return getItems(params)
-    .then((res: { data: { results: any; total_pages: any } }) => ({
+    .then((res: { data: { results: []; total_pages: number } }) => ({
       items: res.data.results,
       totalPages: res.data.total_pages,
       error: false,
     }))
-    .catch((err: any) => ({
+    .catch((err: object) => ({
       items: [],
       totalPages: 0,
       error: true,
@@ -56,10 +57,8 @@ const getItem = async (uri: any) => {
 
 export async function getStaticProps({
   params,
-  locale,
-  preview,
 }: GetStaticPropsContext<{ uri: string }>) {
-  const data = await getItem(params.uri)
+  const data = await getItem(params && params.uri)
 
   if (!data) {
     throw new Error(`Product with uri '${params!.uri}' not found`)
@@ -73,20 +72,24 @@ export async function getStaticProps({
 
 export async function getStaticPaths({ locales }: GetStaticPathsContext) {
   let payload = {
+    modelName: 'product',
     currentPage: 1,
     selectedPageSize: 150,
   }
   const data = await getAllModels(payload)
+
   return {
     paths: locales
       ? locales.reduce<string[]>((arr, locale) => {
           // Add a product path for every locale
-          data.items.forEach((product: { uri: any }) => {
+          data.items.forEach((product: { uri: string }) => {
             arr.push(`/${locale}/product/${product.uri}`)
           })
           return arr
         }, [])
-      : data.items.map((product: { uri: any }) => `/product/${product.uri}`),
+      : data.items.forEach(
+          (product: { uri: any }) => `/product/${product.uri}`
+        ),
     // If your store has tons of products, enable fallback mode to improve build times!
     fallback: false,
   }

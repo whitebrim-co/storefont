@@ -1,8 +1,6 @@
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import Link from 'next/link'
 import cn from 'classnames'
-import useCart from '@bigcommerce/storefront-data-hooks/cart/use-cart'
-import useCustomer from '@bigcommerce/storefront-data-hooks/use-customer'
 import { Menu } from '@headlessui/react'
 import { Heart, Bag } from '@components/icons'
 import { Avatar } from '@components/core'
@@ -10,27 +8,53 @@ import { useUI } from '@components/ui/context'
 import DropdownMenu from './DropdownMenu'
 import s from './UserNav.module.css'
 
+import { getUser } from 'whitebrim'
 interface Props {
   className?: string
 }
 
-const countItem = (count: number, item: any) => count + item.quantity
-const countItems = (count: number, items: any[]) =>
-  items.reduce(countItem, count)
-
 const UserNav: FC<Props> = ({ className, children, ...props }) => {
-  const { data } = useCart()
-  const { data: customer } = useCustomer()
+  const {
+    toggleSidebar,
+    closeSidebarIfPresent,
+    openModal,
+    user,
+    setUser,
+  } = useUI()
 
-  const { toggleSidebar, closeSidebarIfPresent, openModal } = useUI()
-  const itemsCount = Object.values(data?.line_items ?? {}).reduce(countItems, 0)
+  useEffect(() => {
+    //! FOR WHITEBRIM CHECKOUT (NEED TO FIX THIS ISSUE ON CHECKOUT)
+    const persist =
+      '{"auth":"{"currLang":null,"token":null,"userId":null,"userDetails":null,"cart":[]}","_persist":"{"version":-1,"rehydrated":true}"}'
+    localStorage.setItem('persist:whitebrim', persist)
+
+    if (localStorage.getItem('wb_token')) {
+      console.log('Authenticating...')
+      getUser()
+        .then((response) => {
+          setUser(response.data)
+          console.log('Authenticated with success!')
+        })
+        .catch((err) => {
+          console.log(err)
+          localStorage.removeItem('wb_token')
+          localStorage.removeItem('wb_userId')
+          console.log('There was an error authenticating.')
+        })
+    } else {
+      console.log('Not Logged In')
+    }
+  }, [])
+
   return (
     <nav className={cn(s.root, className)}>
       <div className={s.mainContainer}>
         <ul className={s.list}>
           <li className={s.item} onClick={toggleSidebar}>
             <Bag />
-            {itemsCount > 0 && <span className={s.bagCount}>{itemsCount}</span>}
+            {user && user.cart > 0 && (
+              <span className={s.bagCount}>{user.cart.length}</span>
+            )}
           </li>
           <li className={s.item}>
             <Link href="/wishlist">
@@ -40,7 +64,7 @@ const UserNav: FC<Props> = ({ className, children, ...props }) => {
             </Link>
           </li>
           <li className={s.item}>
-            {customer ? (
+            {user ? (
               <Menu>
                 {({ open }) => (
                   <>

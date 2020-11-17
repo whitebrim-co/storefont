@@ -7,17 +7,17 @@ import { WishlistCard } from '@components/wishlist'
 import { Transition } from '@headlessui/react'
 
 export default function Wishlist() {
+  // MISSING API
   const data = {
     items: [],
   }
-  const isEmpty = true
 
   return (
     <Container>
       <div className="mt-3 mb-20">
         <Text variant="pageHeading">My Wishlist</Text>
         <div className="group flex flex-col">
-          {isEmpty ? (
+          {true ? (
             <Transition show>
               <Transition.Child
                 enter="transition-opacity ease-linear duration-300"

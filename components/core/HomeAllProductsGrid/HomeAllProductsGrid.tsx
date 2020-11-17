@@ -1,8 +1,11 @@
 import { FC } from 'react'
 import Link from 'next/link'
+
 import { getCategoryPath, getDesignerPath } from '@lib/search'
+
 import { Grid } from '@components/ui'
 import { ProductCard } from '@components/product'
+
 import s from './HomeAllProductsGrid.module.css'
 
 interface Props {
@@ -23,8 +26,8 @@ const Head: FC<Props> = ({ categories, brands, newestProducts }) => {
               </Link>
             </li>
             {categories.map((cat: any) => (
-              <li key={cat.path} className="py-1 text-accents-8">
-                <Link href={getCategoryPath(cat.path)}>
+              <li key={cat._id} className="py-1 text-accents-8">
+                <Link href={getCategoryPath(cat._id)}>
                   <a>{cat.name}</a>
                 </Link>
               </li>
@@ -36,10 +39,10 @@ const Head: FC<Props> = ({ categories, brands, newestProducts }) => {
                 <a>All Designers</a>
               </Link>
             </li>
-            {brands.flatMap(({ node }: any) => (
-              <li key={node.path} className="py-1 text-accents-8">
-                <Link href={getDesignerPath(node.path)}>
-                  <a>{node.name}</a>
+            {brands.flatMap((brand: any) => (
+              <li key={brand._id} className="py-1 text-accents-8">
+                <Link href={getDesignerPath(brand._id)}>
+                  <a>{brand.name}</a>
                 </Link>
               </li>
             ))}

@@ -1,6 +1,7 @@
-import { FC, useState, useEffect } from 'react'
+import { FC, useState } from 'react'
 import cn from 'classnames'
 import Image from 'next/image'
+import { useRouter } from 'next/router'
 import { NextSeo } from 'next-seo'
 
 import s from './ProductView.module.css'
@@ -8,7 +9,7 @@ import { useUI } from '@components/ui/context'
 import { Swatch, ProductSlider } from '@components/product'
 import { Button, Container } from '@components/ui'
 import { HTMLContent } from '@components/core'
-// import WishlistButton from '@components/wishlist/WishlistButton'
+import WishlistButton from '@components/wishlist/WishlistButton'
 
 import { getItemVariants } from '../helpers'
 
@@ -21,27 +22,19 @@ interface Props {
 }
 
 const ProductView: FC<Props> = ({ product }) => {
-  const { openSidebar, setModalView } = useUI()
+  const { locale } = useRouter()
+  const { openSidebar, openModal, setModalView } = useUI()
 
   const variants = getItemVariants(product)
-  const [selectedSize, selectSize] = useState(null)
+  const [selectedSize, selectSize] = useState<any>(null)
 
-  const [colors, setColors] = useState([])
-  const [selectedColor, selectColor] = useState(null)
+  const [colors, setColors] = useState<any>([])
+  const [selectedColor, selectColor] = useState<any>(null)
 
-  const [loading, setLoading] = useState(false)
-
-  useEffect(() => {
-    if (product.gallery.length > 0) {
-      product.gallery.find((photo) => {
-        if (photo.url !== product.photo.url) {
-          product.gallery.unshift(product.photo)
-        }
-      })
-    } else {
-      product.gallery.unshift(product.photo)
-    }
-  }, [])
+  const [loading, setLoading] = useState<boolean>(false)
+  const [currLocale, setLocale] = useState<string>(
+    locale === 'es' ? 'es_ES' : 'en_US'
+  )
 
   const addItemToCart = () => {
     if (localStorage.getItem('wb_token')) {
@@ -58,9 +51,11 @@ const ProductView: FC<Props> = ({ product }) => {
           model_id: product._id,
           model_name: product.model_name,
           quantity: 1,
+          // If color use color id else use size id
           variant: !selectedColor
             ? selectedSize[0].variant_id
             : selectedColor.variant_id, // SELECTED_VARIANT
+          //
           userId: localStorage.getItem('wb_userId'), // USER ID
         }
       } else {
@@ -92,10 +87,11 @@ const ProductView: FC<Props> = ({ product }) => {
         })
     } else {
       setModalView('LOGIN_VIEW')
+      return openModal()
     }
   }
 
-  const selectMainVariant = (key) => {
+  const selectMainVariant = (key: any) => {
     selectColor(null)
 
     variants[key].size_name = key
@@ -108,19 +104,32 @@ const ProductView: FC<Props> = ({ product }) => {
     }
   }
 
-  const selectMainColor = (color) => {
+  const selectMainColor = (color: object) => {
     selectColor(color)
+  }
+
+  // Set locale to show product info in the correct language
+  const currLocaleSplit = currLocale.split('_')
+  const localeSplit = locale?.split('-')
+  if (localeSplit[0] !== currLocaleSplit[0]) {
+    setLocale(locale === 'es' ? 'es_ES' : 'en_US')
   }
 
   return (
     <Container className="max-w-none w-full" clean>
       <NextSeo
         title={product.name}
-        description={product.description}
+        description={
+          currLocale
+            ? product.description[currLocale]
+            : product.description.en_US
+        }
         openGraph={{
           type: 'website',
           title: product.name,
-          description: product.description,
+          description: currLocale
+            ? product.description[currLocale]
+            : product.description.en_US,
           images: [
             {
               url: `https:${product.photo.url}`,
@@ -136,13 +145,25 @@ const ProductView: FC<Props> = ({ product }) => {
           <div className={s.nameBox}>
             <h1 className={s.name}>{product.name}</h1>
             <div className={s.price}>
-              {product.price}
+              {product.price.toFixed(2)}
               {` `}€
             </div>
           </div>
 
           <div className={s.sliderContainer}>
             <ProductSlider>
+              {/* Main photo then gallery */}
+              <div key={product.photo.url} className={s.imageContainer}>
+                <Image
+                  className={s.img}
+                  src={`https:${product.photo.url}`}
+                  alt={product.name}
+                  width={1050}
+                  height={1050}
+                  priority={true}
+                  quality="85"
+                />
+              </div>
               {product.gallery &&
                 product.gallery.map((image: { url: string }, i: number) => (
                   <div key={image.url} className={s.imageContainer}>
@@ -152,7 +173,7 @@ const ProductView: FC<Props> = ({ product }) => {
                       alt={'Product Image'}
                       width={1050}
                       height={1050}
-                      priority={i === 0}
+                      priority={false}
                       quality="85"
                     />
                   </div>
@@ -202,7 +223,7 @@ const ProductView: FC<Props> = ({ product }) => {
               </div>
             </div>
             <div className="pb-14 break-words w-full max-w-xl">
-              <HTMLContent html={product.description} />
+              <HTMLContent html={product.description[currLocale]} />
             </div>
           </section>
           <div>
@@ -223,11 +244,11 @@ const ProductView: FC<Props> = ({ product }) => {
           </div>
         </div>
 
-        {/* <WishlistButton
+        <WishlistButton
           className={s.wishlistButton}
           productId={product.entityId}
           variant={null}
-        /> */}
+        />
       </div>
     </Container>
   )
