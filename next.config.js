@@ -31,6 +31,14 @@ module.exports = {
         source: '/search/:category',
         destination: '/search',
       },
+      {
+        source: '/checkout/(.*)',
+        destination: 'https://d1hhebv6hmhzhi.cloudfront.net/$1'
+      },
+      {
+        source: '/checkout',
+        destination: 'https://d1hhebv6hmhzhi.cloudfront.net/'
+      }
     ]
   },
 }
