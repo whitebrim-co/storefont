@@ -27,7 +27,7 @@ const Head: FC<Props> = ({ categories, brands, newestProducts }) => {
             </li>
             {categories.map((cat: any) => (
               <li key={cat._id} className="py-1 text-accents-8">
-                <Link href={getCategoryPath(cat._id)}>
+                <Link href={`/search?cat=${cat._id}`}>
                   <a>{cat.name}</a>
                 </Link>
               </li>
@@ -41,7 +41,7 @@ const Head: FC<Props> = ({ categories, brands, newestProducts }) => {
             </li>
             {brands.flatMap((brand: any) => (
               <li key={brand._id} className="py-1 text-accents-8">
-                <Link href={getDesignerPath(brand._id)}>
+                <Link href={`/search?designer=${brand._id}`}>
                   <a>{brand.name}</a>
                 </Link>
               </li>

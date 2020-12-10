@@ -195,8 +195,8 @@ export default function Home({
             key={item.uri}
             product={item}
             variant="slim"
-            imgWidth={320}
-            imgHeight={320}
+            imgWidth={360}
+            imgHeight={480}
           />
         ))}
       </Marquee>

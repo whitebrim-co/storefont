@@ -23,7 +23,7 @@ const ProductCard: FC<Props> = ({
   imgHeight,
   priority,
 }) => {
-  const src = `https:${p.photo.url}`
+  const src = `${p.photo.url}`
 
   return (
     <Link href={`/product/${p.uri}`}>
@@ -38,7 +38,7 @@ const ProductCard: FC<Props> = ({
               </span>
             </div>
             <EnhancedImage
-              src={`https:${p.photo.url}`}
+              src={`${p.photo.url}`}
               alt={'Product Image'}
               width={imgWidth}
               height={imgHeight}

@@ -132,7 +132,7 @@ const ProductView: FC<Props> = ({ product }) => {
             : product.description.en_EN,
           images: [
             {
-              url: `https:${product.photo.url}`,
+              url: `${product.photo.url}`,
               width: 800,
               height: 600,
               alt: product.name,
@@ -156,7 +156,7 @@ const ProductView: FC<Props> = ({ product }) => {
               <div key={product.photo.url} className={s.imageContainer}>
                 <Image
                   className={s.img}
-                  src={`https:${product.photo.url}`}
+                  src={`${product.photo.url}`}
                   alt={product.name}
                   width={1050}
                   height={1050}
@@ -169,7 +169,7 @@ const ProductView: FC<Props> = ({ product }) => {
                   <div key={image.url} className={s.imageContainer}>
                     <Image
                       className={s.img}
-                      src={`https:${image.url}`}
+                      src={`${image.url}`}
                       alt={'Product Image'}
                       width={1050}
                       height={1050}

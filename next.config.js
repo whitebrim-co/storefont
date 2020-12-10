@@ -1,7 +1,7 @@
 module.exports = {
   images: {
     sizes: [320, 480, 820, 1200, 1600],
-    domains: ['whitebrim2.imgix.net'],
+    domains: ['whitebrim2.imgix.net', 'cottonhat-cdn.s3-eu-west-1.amazonaws.com'],
   },
   i18n: {
     locales: ['en-US', 'es'],
