@@ -1,6 +1,0 @@
-{
-    "routes": [
-        { "src": "/checkout/(.*)", "dest": "https://d1hhebv6hmhzhi.cloudfront.net/$1" },
-        { "src": "/checkout", "dest": "https://d1hhebv6hmhzhi.cloudfront.net/" }
-    ]
-}
