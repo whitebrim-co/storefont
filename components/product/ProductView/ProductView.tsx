@@ -33,7 +33,7 @@ const ProductView: FC<Props> = ({ product }) => {
 
   const [loading, setLoading] = useState<boolean>(false)
   const [currLocale, setLocale] = useState<string>(
-    locale === 'es' ? 'es_ES' : 'en_EN'
+    locale === 'es' ? 'es_ES' : 'en_US'
   )
 
   const addItemToCart = () => {
@@ -112,7 +112,7 @@ const ProductView: FC<Props> = ({ product }) => {
   const currLocaleSplit: any = currLocale.split('_')
   const localeSplit: any = locale?.split('-')
   if (localeSplit[0] !== currLocaleSplit[0]) {
-    setLocale(locale === 'es' ? 'es_ES' : 'en_EN')
+    setLocale(locale === 'es' ? 'es_ES' : 'en_US')
   }
 
   return (
@@ -122,14 +122,14 @@ const ProductView: FC<Props> = ({ product }) => {
         description={
           currLocale
             ? product.description[currLocale]
-            : product.description.en_EN
+            : product.description.en_US
         }
         openGraph={{
           type: 'website',
           title: product.name,
           description: currLocale
             ? product.description[currLocale]
-            : product.description.en_EN,
+            : product.description.en_US,
           images: [
             {
               url: `${product.photo.url}`,
